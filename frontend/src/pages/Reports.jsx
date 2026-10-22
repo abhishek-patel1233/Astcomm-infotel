@@ -71,7 +71,7 @@ export default function Reports() {
 
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/transactions', {
+      const response = await axios.get('https://softwareb.onrender.com/api/transactions', {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           startDate,

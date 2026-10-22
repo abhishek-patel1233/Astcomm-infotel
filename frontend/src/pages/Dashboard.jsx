@@ -75,7 +75,7 @@ export default function Dashboard() {
         const storedUser = JSON.parse(localStorage.getItem('user'));
         if (storedUser) setUser(storedUser);
 
-        const res = await axios.get('http://localhost:5000/api/transactions', {
+        const res = await axios.get('https://softwareb.onrender.com/api/transactions', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTxns(Array.isArray(res.data) ? res.data : []);
@@ -88,6 +88,8 @@ export default function Dashboard() {
     load();
   }, [navigate]);
 
+
+  
   const stats = useMemo(() => {
     const sales = txns.filter((t) => t.type === 'SALE');
     const purchases = txns.filter((t) => t.type === 'PURCHASE');

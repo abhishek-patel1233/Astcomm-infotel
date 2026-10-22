@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance with a pre-configured base URL
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api', // Yahan apna backend server URL dalein
+  baseURL: 'https://softwareb.onrender.com/api', // Yahan apna backend server URL dalein
   headers: {
     'Content-Type': 'application/json',
   },

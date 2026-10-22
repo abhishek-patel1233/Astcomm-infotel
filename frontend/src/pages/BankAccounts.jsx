@@ -4,7 +4,7 @@ import axios from 'axios';
 import { ArrowLeft, Plus, Trash2, Search, Landmark } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
-const API = 'http://localhost:5000/api/bank-accounts';
+const API = 'https://softwareb.onrender.com/api/bank-accounts';
 
 const todayStr = () => {
   const t = new Date();

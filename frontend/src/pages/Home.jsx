@@ -241,7 +241,7 @@ export default function HomePage() {
           setUser(storedUser);
         }
 
-        const res = await axios.get('http://localhost:5000/api/transactions/', { headers });
+        const res = await axios.get('https://softwareb.onrender.com/api/transactions/', { headers });
         setTransactions(res.data);
       } catch (err) {
         console.error('Failed to fetch data', err);
@@ -251,7 +251,7 @@ export default function HomePage() {
 
       // Bank details for invoice (optional)
       try {
-        const bres = await axios.get('http://localhost:5000/api/bank-accounts', { headers });
+        const bres = await axios.get('https://softwareb.onrender.com/api/bank-accounts', { headers });
         const printable = bres.data.find((b) => b.printBankDetails) || null;
         setBank(printable);
       } catch (err) {

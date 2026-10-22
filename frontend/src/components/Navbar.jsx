@@ -21,7 +21,7 @@ export default function Navbar({ onOpenMenu, user }) {
     { label: 'ITEMS', path: '/items', icon: Package },
     // { label: 'REPORTS', path: '/reports', icon: FileText },
     { label: 'BANK', path: '/bank-accounts', icon: Building2 },
-    { label: 'Menu',  path: '/menu', icon: MenuIcon }, // Menu trigger handler
+    { label: 'Menu',  path: '/menus', icon: MenuIcon }, // Menu trigger handler
   ];
 
   return (

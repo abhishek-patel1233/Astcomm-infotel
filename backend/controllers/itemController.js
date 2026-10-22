@@ -52,7 +52,6 @@ exports.updateItem = async (req, res) => {
       return res.status(400).json({ message: 'Item name is required' });
     }
 
-    // Opening stock badalne par current stock bhi usi hisab se adjust hoga
     const newOpening = Number(openingStock) || 0;
     item.currentStock += newOpening - item.openingStock;
     item.openingStock = newOpening;

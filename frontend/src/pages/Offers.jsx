@@ -179,7 +179,7 @@ export default function Offers() {
           </div>
           <button
             onClick={() => setShowSummary(true)}
-            className="flex-1 sm:flex-none sm:px-10 py-3.5 bg-rose-600 text-white rounded-xl font-extrabold text-sm shadow-lg hover:bg-rose-700 transition"
+            className="mb-10  flex-1 sm:flex-none sm:px-10 py-3.5 bg-rose-600 text-white rounded-xl font-extrabold text-sm shadow-lg hover:bg-rose-700 transition"
           >
             Continue
           </button>
@@ -213,10 +213,11 @@ export default function Offers() {
                 <span>{inr(plan.price)}</span>
               </div>
             </div>
-
-            <button onClick={startPayment} className="w-full py-3.5 bg-rose-600 text-white rounded-xl font-extrabold hover:bg-rose-700 transition">
-              Pay {inr(plan.price)}
+<div >
+            <button onClick={startPayment} className=" flex-1 sm:flex-none sm:px-10 py-3.5 bg-rose-600 text-white rounded-xl font-extrabold text-sm shadow-lg hover:bg-rose-700 transition  ">
+                          Pay {inr(plan.price)}
             </button>
+            </div>
           </div>
         </div>
       )}

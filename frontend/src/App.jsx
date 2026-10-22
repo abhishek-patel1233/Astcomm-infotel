@@ -15,6 +15,11 @@ import Navbar from './components/Navbar';
 import Items from './pages/Items';
 import Offers from './pages/Offers';
 import Notifications from './pages/Notifications';
+import Menus from './components/Menu';
+import AddPurchase from './pages/AddPurchase';
+import Expenses from './pages/Expenses';
+// ...
+
 function App() {
   return (
     <>
@@ -43,6 +48,11 @@ function App() {
        <Route path='/bank-accounts' element = {<BankAccounts/>}/>
       <Route path="/offers" element={<Offers />} />
        <Route path="/notifications" element={<Notifications />} />
+       
+       <Route path="/menus" element={<Menus/>} />
+       <Route path="/add-purchase" element={<AddPurchase />} /> 
+       <Route path="/expenses" element={<Expenses/>} /> 
+       
       </Routes>
     </Router>
     </>

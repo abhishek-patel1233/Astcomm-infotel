@@ -4,7 +4,7 @@ import axios from 'axios';
 import { ArrowLeft, Bell, Wallet, ArrowUpRight, PackageX, PackageMinus, MessageCircle, CheckCheck } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
-const API = 'http://localhost:5000/api';
+const API = 'https://softwareb.onrender.com/api';
 
 const fmt = (n) =>
   Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

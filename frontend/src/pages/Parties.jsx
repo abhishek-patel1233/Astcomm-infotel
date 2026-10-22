@@ -31,7 +31,7 @@ export default function Parties() {
 
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/parties', {
+      const response = await axios.get('https://softwareb.onrender.com/api/parties', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setParties(response.data || []);
@@ -68,7 +68,7 @@ export default function Parties() {
         balanceType
       };
 
-      await axios.post('http://localhost:5000/api/parties/add', newPartyData, {
+      await axios.post('https://softwareb.onrender.com/api/parties/add', newPartyData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

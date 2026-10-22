@@ -4,7 +4,7 @@ import axios from 'axios';
 import { ArrowLeft, Plus, Trash2, Search, Package, Pencil, X, Boxes, IndianRupee, AlertTriangle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
-const API = 'http://localhost:5000/api/items';
+const API = 'https://softwareb.onrender.com/api/items';
 
 const emptyForm = () => ({
   itemName: '',
@@ -363,7 +363,7 @@ export default function Items() {
       </main>
 
       {/* Mobile floating add button */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 flex justify-center pb-4 pointer-events-none z-20">
+      <div className="fixed bottom-14 md:bottom-0 left-0 right-0 md:left- bg-white border-t border-slate-200 z-30 shadow-lg">
         <button
           onClick={openAdd}
           className="pointer-events-auto flex items-center space-x-2 bg-rose-600 text-white px-8 py-3.5 rounded-full font-extrabold shadow-lg hover:bg-rose-700 transition" 

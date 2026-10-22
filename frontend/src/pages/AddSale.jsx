@@ -37,7 +37,7 @@ export default function AddSale() {
       if (!token) return;
 
       try {
-        const response = await axios.get('http://localhost:5000/api/transactions/add', {
+        const response = await axios.get('https://softwareb.onrender.com/api/transactions/add', {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.data && response.data.invoiceNo) {
@@ -119,7 +119,7 @@ export default function AddSale() {
         type: 'SALE'
       };
 
-      await axios.post('http://localhost:5000/api/transactions/add', saleData, {
+      await axios.post('https://softwareb.onrender.com/api/transactions/add', saleData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -365,7 +365,7 @@ export default function AddSale() {
       )}
 
       {/* Bottom Action Bar */}
-      <div className="bg-white border-t border-slate-200 p-3 grid grid-cols-2 gap-3 fixed bottom-0 left-0 right-0 max-w-7xl mx-auto z-20 shadow-lg">
+      <div className="fixed bottom-14 md:bottom-0 left-0 right-0 md:left-64 grid grid-cols-2 bg-white border-t border-slate-200 z-30 shadow-lg">
         <button 
           onClick={() => handleSaveSale(false)}
           className="py-3.5 bg-slate-200 text-slate-800 rounded-xl font-bold text-sm shadow hover:bg-slate-300 transition"

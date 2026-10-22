@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import html2canvas from 'html2canvas';
-import { ArrowLeft, ImagePlus, Plus, Share2, Phone, Mail, MapPin, Lightbulb, Eraser } from 'lucide-react';
+import { ArrowLeft, ImagePlus, Plus, Share2, Phone, Mail, MapPin, Lightbulb, Eraser, LogOut } from 'lucide-react';
 import Navbar from '../components/Navbar';
+
+const API = 'https://softwareb.onrender.com/api/business-profile';
 
 const STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
@@ -41,6 +44,16 @@ const emptyProfile = () => ({
   website: '',
   terms: '',
 });
+
+// server se aaye data me se sirf profile ki fields rakhta hai (_id, user, __v hata deta hai)
+const pickProfile = (obj) => {
+  const base = emptyProfile();
+  const out = {};
+  Object.keys(base).forEach((k) => {
+    out[k] = obj && obj[k] !== undefined && obj[k] !== null ? obj[k] : base[k];
+  });
+  return out;
+};
 
 // ---------- small reusable pieces (bahar defined, taaki typing me focus na jaye) ----------
 function FloatField({ label, value, onChange, error, type = 'text', maxLength, multiline, placeholder, children }) {
@@ -162,7 +175,7 @@ function SignaturePad({ value, onChange }) {
   );
 }
 
-// logo ko chhota karke save karte hain (localStorage bhari na ho)
+// logo ko chhota karke save karte hain (server par bhaari na ho)
 const resizeImage = (file, max = 300) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -191,7 +204,12 @@ export default function BusinessProfile() {
   const [tab, setTab] = useState('basic');
   const [errors, setErrors] = useState({});
   const [sharing, setSharing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [showLogout, setShowLogout] = useState(false);
 
+  // Pehle local cache se jaldi dikhao, phir server se asli data aayega
   const [p, setP] = useState(() => {
     const user = JSON.parse(localStorage.getItem('user')) || {};
     const saved = JSON.parse(localStorage.getItem('businessProfile')) || {};
@@ -203,6 +221,51 @@ export default function BusinessProfile() {
       ...saved,
     };
   });
+
+  // ---------- Server se profile load ----------
+  const loadProfile = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setLoadError('');
+    try {
+      const res = await axios.get(API, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { t: Date.now() },
+      });
+
+      if (res.data.profile) {
+        const server = pickProfile(res.data.profile);
+        setP((prev) => ({
+          ...prev,
+          ...server,
+          businessName: server.businessName || prev.businessName,
+          phone1: server.phone1 || prev.phone1,
+          email: server.email || prev.email,
+        }));
+        localStorage.setItem('businessProfile', JSON.stringify(server));
+      }
+      setLoaded(true); // sirf success par
+    } catch (err) {
+      if (err.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
+      console.error('Profile load failed', err);
+      setLoadError(
+        err.response?.data?.message ||
+          `Server se profile nahi mila (${err.response?.status || 'network error'})`
+      );
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+    // eslint-disable-next-line
+  }, []);
 
   const set = (key, value) => {
     setP((prev) => ({ ...prev, [key]: value }));
@@ -241,7 +304,9 @@ export default function BusinessProfile() {
     return err;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
+
     const err = validate();
     setErrors(err);
     if (Object.keys(err).length) {
@@ -251,17 +316,45 @@ export default function BusinessProfile() {
       return;
     }
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
     const clean = { ...p, gstin: p.gstin.toUpperCase(), pan: p.pan.toUpperCase() };
-    localStorage.setItem('businessProfile', JSON.stringify(clean));
 
-    const user = JSON.parse(localStorage.getItem('user')) || {};
-    localStorage.setItem(
-      'user',
-      JSON.stringify({ ...user, fullName: clean.businessName, mobileNumber: clean.phone1, email: clean.email })
-    );
+    setSaving(true);
+    try {
+      const res = await axios.put(API, clean, { headers: { Authorization: `Bearer ${token}` } });
+      const saved = pickProfile(res.data.profile);
 
-    alert('Business Profile saved successfully!');
-    navigate('/home');
+      // local cache + navbar/home me naya naam dikhane ke liye
+      localStorage.setItem('businessProfile', JSON.stringify(saved));
+      const user = JSON.parse(localStorage.getItem('user')) || {};
+      localStorage.setItem(
+        'user',
+        JSON.stringify({ ...user, fullName: saved.businessName, mobileNumber: saved.phone1, email: saved.email })
+      );
+
+      alert('Business Profile saved successfully!');
+      navigate('/home');
+    } catch (e) {
+      if (e.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
+      console.error(e);
+      alert(e.response?.data?.message || 'Profile save nahi ho paya');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
+    ['token', 'user', 'businessProfile', 'selectedPlan', 'readNotifs'].forEach((k) => localStorage.removeItem(k));
+    setShowLogout(false);
+    navigate('/login', { replace: true });
   };
 
   const cardText = () =>
@@ -460,6 +553,18 @@ export default function BusinessProfile() {
 
       {/* Form */}
       <main className="max-w-3xl mx-auto w-full p-4 sm:p-6 space-y-6">
+        {loadError && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 text-sm flex items-center justify-between gap-3">
+            <span>{loadError}. Jab tak ye theek na ho Save band hai.</span>
+            <button
+              onClick={loadProfile}
+              className="shrink-0 px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {tab === 'basic' ? (
           <>
             <FloatField label="Business Name" value={p.businessName} onChange={(v) => set('businessName', v)} error={errors.businessName} />
@@ -482,7 +587,12 @@ export default function BusinessProfile() {
             <FloatField label="Pincode" type="tel" maxLength={6} value={p.pincode} onChange={(v) => set('pincode', v.replace(/\D/g, ''))} error={errors.pincode} />
             <FloatField label="Business Description" value={p.description} onChange={(v) => set('description', v)} multiline />
 
-            <SignaturePad value={p.signature} onChange={(v) => set('signature', v)} />
+            {/* Signature server data aane ke baad hi draw hota hai */}
+            {loaded ? (
+              <SignaturePad value={p.signature} onChange={(v) => set('signature', v)} />
+            ) : (
+              !loadError && <p className="text-sm text-slate-400">Signature load ho raha hai...</p>
+            )}
           </>
         ) : (
           <>
@@ -519,17 +629,70 @@ export default function BusinessProfile() {
             <FloatField label="Terms & Conditions (invoice par)" value={p.terms} onChange={(v) => set('terms', v)} multiline placeholder="1. Payment due as per agreed credit terms." />
           </>
         )}
+
+        {/* Logout */}
+        <div className="pt-4 border-t border-dashed border-slate-300">
+          <button
+            type="button"
+            onClick={() => setShowLogout(true)}
+            className="w-full flex items-center justify-center space-x-2 py-3.5 rounded-xl border-2 border-rose-200 text-rose-600 font-bold text-sm hover:bg-rose-50 transition"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
+        </div>
       </main>
 
       {/* Bottom bar */}
-      <div className=" pb-20 fixed bottom-0 left-0 right-0 grid grid-cols-2 bg-white border-t border-slate-200 z-20 shadow-lg">
+      {/* <div className="fixed bottom-0 left-0 right-0 grid grid-cols-2 bg-white border-t border-slate-200 z-20 shadow-lg">
         <button onClick={() => navigate('/home')} className="py-4 text-slate-500 font-bold text-base hover:bg-slate-50 transition">
           Cancel
         </button>
-        <button onClick={handleSave} className="py-4 bg-rose-600 text-white font-bold text-base hover:bg-rose-700 transition ">
-          Save
+        <button
+          onClick={handleSave}
+          disabled={saving || !loaded}
+          className="py-4 bg-rose-600 text-white font-bold text-base hover:bg-rose-700 transition disabled:opacity-60"
+        >
+          {saving ? 'Saving...' : 'Save'}
+        </button>
+      </div> */}
+
+            {/* Bottom bar */}
+      <div className="fixed bottom-14 md:bottom-0 left-0 right-0 md:left-64 grid grid-cols-2 bg-white border-t border-slate-200 z-30 shadow-lg">
+        <button onClick={() => navigate('/home')} className="py-4 text-slate-500 font-bold text-base hover:bg-slate-50 transition">
+          Cancel
+        </button>
+        <button
+          onClick={handleSave}
+          // disabled={saving || !loaded}
+          className="py-4 bg-rose-600 text-white font-bold text-base hover:bg-rose-700 transition disabled:opacity-60"
+        >
+          {saving ? 'Saving...' : 'Save'}
         </button>
       </div>
+
+      {/* Logout confirm */}
+      {showLogout && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowLogout(false)}>
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl text-center space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="w-14 h-14 mx-auto rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
+              <LogOut className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="text-lg font-extrabold text-slate-800">Logout karein?</h3>
+              <p className="text-sm text-slate-500 mt-1">Aap is device se sign out ho jayenge.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button onClick={() => setShowLogout(false)} className="py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition">
+                Cancel
+              </button>
+              <button onClick={handleLogout} className="py-3 bg-rose-600 text-white rounded-xl font-bold text-sm hover:bg-rose-700 transition">
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
